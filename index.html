@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smart Fridge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#EAF6FB;--card:#fff;--ink:#12384A;--mute:#4B6B78;--teal:#0E7C86;--on-teal:#fff;--line:#CFE6EE;--soft:#E3F3F7;--coral:#D93F3C;--coral-bg:#FFE1E0;--amber:#8A5D00;--amber-bg:#FFF1C2;--leaf:#2E9A57;--leaf-bg:#DDF3E5;--shadow:rgba(11,79,92,.12);
+ box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0A262E;--card:#10404B;--ink:#EAF6FB;--mute:#9CC3CF;--teal:#4FC3CF;--on-teal:#06323A;--line:#245866;--soft:#0D3640;--coral:#FF8582;--coral-bg:#5A2A2C;--amber:#FFD36B;--amber-bg:#4F4012;--leaf:#6FD595;--leaf-bg:#1B4A31;--shadow:rgba(0,0,0,.35);color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0A262E;--card:#10404B;--ink:#EAF6FB;--mute:#9CC3CF;--teal:#4FC3CF;--on-teal:#06323A;--line:#245866;--soft:#0D3640;--coral:#FF8582;--coral-bg:#5A2A2C;--amber:#FFD36B;--amber-bg:#4F4012;--leaf:#6FD595;--leaf-bg:#1B4A31;--shadow:rgba(0,0,0,.35);color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Poppins,system-ui,-apple-system,"Segoe UI",sans-serif;line-height:1.5;min-height:100vh}
+main{max-width:560px;margin:0 auto;padding:20px 16px 56px}
+h1{font-size:1.75rem;line-height:1.2;margin:0 0 4px;font-weight:700}
+h2{font-size:1.05rem;margin:0 0 10px;font-weight:600}
+p{margin:0}.mute{color:var(--mute);font-size:.9rem}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+.card{background:var(--card);border-radius:20px;padding:18px;margin-top:16px;box-shadow:0 6px 18px var(--shadow)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.chip{border-radius:999px;padding:4px 12px;font-size:.82rem;font-weight:500;background:var(--soft)}
+.chip.warn{background:var(--amber-bg);color:var(--amber)}.chip.low{background:var(--coral-bg);color:var(--coral)}
+.scan{width:100%;display:flex;align-items:center;gap:16px;text-align:left;border:0;border-radius:22px;padding:18px;background:var(--teal);color:var(--on-teal);margin-top:18px;box-shadow:0 8px 20px var(--shadow)}
+.scan svg{flex:none;width:52px;height:52px}
+.scan b{display:block;font-size:1.15rem;font-weight:600}.scan span{font-size:.88rem;opacity:.9}
+.scan[disabled]{opacity:.7;cursor:progress}
+.status{margin-top:12px;font-size:.9rem;min-height:1.4em}
+.status.err{color:var(--coral)}
+.bar{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;width:35%;background:var(--teal);animation:slide 1.1s ease-in-out infinite alternate}
+@keyframes slide{to{margin-left:65%}}
+@media (prefers-reduced-motion:reduce){.bar i{animation:none;width:100%}}
+.alert{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;margin-top:8px;font-size:.92rem}
+.alert.warn{background:var(--amber-bg);color:var(--amber)}.alert.low{background:var(--coral-bg);color:var(--coral)}
+.alert b{font-weight:600}
+.row{display:flex;align-items:center;gap:10px;padding:12px 0;border-top:1px solid var(--line)}
+.row:first-of-type{border-top:0}
+.row .nm{flex:1;min-width:0}.row .nm b{display:block;font-weight:600;overflow-wrap:anywhere}
+.row small{font-size:.8rem;color:var(--mute)}.row small.warn{color:var(--amber);font-weight:500}.row small.low{color:var(--coral);font-weight:500}
+.step{display:flex;align-items:center;gap:2px;background:var(--soft);border-radius:999px;padding:2px}
+.step button,.x{width:34px;height:34px;border:0;border-radius:50%;background:transparent;font-size:1.1rem;line-height:1}
+.step span{min-width:24px;text-align:center;font-weight:600}
+.x{color:var(--mute)}
+input[type=text],input[type=number],input[type=date]{width:100%;border:1.5px solid var(--line);background:var(--card);border-radius:12px;padding:10px 12px;min-height:44px}
+.f{display:grid;grid-template-columns:1fr 84px;gap:8px}.f .full{grid-column:1/-1}
+.btn{border:0;border-radius:999px;padding:11px 20px;background:var(--leaf);color:#fff;font-weight:600;min-height:44px}
+.btn.ghost{background:var(--soft);color:var(--ink)}
+.shop-res{margin-top:10px;padding:10px 12px;border-radius:14px;font-size:.92rem}
+.shop-res.have{background:var(--amber-bg);color:var(--amber)}.shop-res.ok{background:var(--leaf-bg);color:var(--leaf)}
+details summary{cursor:pointer;font-weight:600;min-height:32px}
+.empty{padding:14px 0 4px;color:var(--mute);font-size:.92rem}
+#cam{position:fixed;inset:0;background:#000;z-index:20;display:flex;flex-direction:column}
+#cam[hidden],#sheet[hidden]{display:none}
+.stage{position:relative;flex:1;min-height:0}.stage video,.stage canvas{position:absolute;inset:0;width:100%;height:100%}.stage video{object-fit:contain}.hud{position:absolute;left:12px;right:12px;top:calc(12px + env(safe-area-inset-top,0px));background:rgba(0,0,0,.65);color:#fff;border-radius:14px;padding:8px 12px;font-size:.9rem}
+
+.camctl{display:flex;justify-content:space-around;align-items:center;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px));background:#000;color:#fff}
+
+.camctl .txt{background:none;border:0;color:#fff;min-width:64px;min-height:44px}
+#sheet{position:fixed;inset:0;z-index:30;background:rgba(5,30,38,.55);display:flex;align-items:flex-end;justify-content:center}
+#sheet .in{background:var(--card);width:100%;max-width:560px;max-height:85vh;overflow:auto;border-radius:24px 24px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom,0px))}
+.det{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.det input[type=checkbox]{width:22px;height:22px;accent-color:var(--teal);flex:none}.det input[type=text]{flex:1;min-width:0}
+.acts{display:flex;gap:8px;margin-top:14px}
+</style>
+</head>
+<body>
+<main>
+  <h1>What’s in my fridge?</h1>
+  <p class="mute">Scan the shelves with your phone camera. Check the list before you shop.</p>
+  <div class="chips" id="chips"></div>
+
+  <button class="scan" id="scanBtn" type="button">
+    <svg viewBox="-24 -24 48 48" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M-17 -9V-17H-9M9 -17H17V-9M17 9V17H9M-9 17H-17V9"/><path d="M-11 0H11"/></svg>
+    <div><b>Scan my fridge</b><span>Point the camera at your food. No photo needed.</span></div>
+  </button>
+  <div class="status" id="status" role="status" aria-live="polite"></div>
+  <input type="file" id="file" accept="image/*" capture="environment" hidden>
+
+  <section class="card" id="alertsCard" hidden><h2>Needs attention</h2><div id="alerts"></div></section>
+
+  <section class="card">
+    <h2>Before you shop</h2>
+    <input type="text" id="shop" placeholder="Type what you’re about to buy" aria-label="Item you are about to buy" autocomplete="off">
+    <div id="shopRes" aria-live="polite"></div>
+  </section>
+
+  <section class="card">
+    <h2>In your fridge</h2>
+    <div id="list"></div>
+    <details style="margin-top:12px"><summary>Add an item by hand</summary>
+      <div class="f" style="margin-top:10px">
+        <input type="text" id="mName" placeholder="Food name" aria-label="Food name">
+        <input type="number" id="mQty" min="1" max="99" value="1" aria-label="Quantity">
+        <div class="full"><label class="mute" for="mDate">Expiry date</label><input type="date" id="mDate"></div>
+        <button class="btn full" id="mAdd" type="button">Save item</button>
+      </div>
+    </details>
+  </section>
+</main>
+
+<div id="cam" hidden>
+  <div class="stage"><video id="vid" playsinline muted></video><canvas id="ov"></canvas><div class="hud" id="hud" role="status" aria-live="polite">Starting camera…</div></div>
+  <div class="camctl"><button class="txt" id="camCancel" type="button">Cancel</button><button class="btn" id="camDone" type="button">Done</button><span style="min-width:64px"></span></div>
+</div>
+<div id="sheet" hidden><div class="in" role="dialog" aria-modal="true" aria-labelledby="shT"><h2 id="shT">We found these items</h2><p class="mute" style="margin-bottom:8px">Rename anything the camera guessed. The number is how many it saw.</p><div id="found"></div>
+  <div class="acts"><button class="btn" id="addAll" type="button">Add to fridge</button><button class="btn ghost" id="shCancel" type="button">Discard</button></div></div></div>
+
+<script>
+(function(){
+var KEY="smartfridge.v1",items=[],stream=null,pending=[],live=false,session={};
+try{items=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){items=[]}
+if(!Array.isArray(items))items=[];
+function save(){try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}}
+var $=function(s){return document.querySelector(s)};
+function el(t,c,x){var n=document.createElement(t);if(c)n.className=c;if(x!=null)n.textContent=x;return n}
+function pad(n){return String(n).padStart(2,"0")}
+function fmt(d){return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate())}
+function today(){var d=new Date();d.setHours(0,0,0,0);return d}
+function inDays(n){var d=today();d.setDate(d.getDate()+n);return fmt(d)}
+function left(it){return Math.round((new Date(it.exp+"T00:00:00")-today())/864e5)}
+function label(n){if(n<0)return"Expired "+(-n)+(n===-1?" day":" days")+" ago";if(n===0)return"Expires today";return n===1?"1 day left":n+" days left"}
+function cls(it){var n=left(it);return n<=2?"warn":""}
+function sorted(){return items.slice().sort(function(a,b){return left(a)-left(b)})}
+
+function render(){
+  var exp=items.filter(function(i){return left(i)<=2}),low=items.filter(function(i){return i.qty<=1});
+  var ch=$("#chips");ch.textContent="";
+  ch.append(el("span","chip",items.length+(items.length===1?" item":" items")));
+  if(exp.length)ch.append(el("span","chip warn",exp.length+" expiring soon"));
+  if(low.length)ch.append(el("span","chip low",low.length+" low on stock"));
+  var al=$("#alerts");al.textContent="";
+  exp.forEach(function(i){var a=el("div","alert warn");a.append(el("b",null,i.name),el("span",null,label(left(i))));al.append(a)});
+  low.forEach(function(i){var a=el("div","alert low");a.append(el("b",null,i.name),el("span",null,i.qty+" left"));al.append(a)});
+  $("#alertsCard").hidden=!(exp.length||low.length);
+  var ls=$("#list");ls.textContent="";
+  if(!items.length){ls.append(el("p","empty","Nothing here yet. Scan a shelf or add an item by hand."))}
+  sorted().forEach(function(it){
+    var r=el("div","row"),nm=el("div","nm");
+    nm.append(el("b",null,it.name),el("small",cls(it)||(it.qty<=1?"low":""),label(left(it))+" · expires "+it.exp));
+    var st=el("div","step"),m=el("button",null,"−"),p=el("button",null,"+");
+    m.type=p.type="button";m.setAttribute("aria-label","One less "+it.name);p.setAttribute("aria-label","One more "+it.name);
+    m.onclick=function(){it.qty=Math.max(0,it.qty-1);if(it.qty===0)items=items.filter(function(x){return x!==it});save();render()};
+    p.onclick=function(){it.qty=Math.min(99,it.qty+1);save();render()};
+    st.append(m,el("span",null,it.qty),p);
+    var x=el("button","x","×");x.type="button";x.setAttribute("aria-label","Remove "+it.name);
+    x.onclick=function(){items=items.filter(function(y){return y!==it});save();render()};
+    r.append(nm,st,x);ls.append(r);
+  });
+  checkShop();
+}
+function checkShop(){
+  var q=$("#shop").value.trim().toLowerCase(),box=$("#shopRes");box.textContent="";
+  if(!q)return;
+  var hit=items.filter(function(i){var n=i.name.toLowerCase();return n.indexOf(q)>-1||q.indexOf(n)>-1});
+  var d=el("div","shop-res "+(hit.length?"have":"ok"));
+  if(hit.length){d.textContent="You already have "+hit.map(function(i){return i.qty+" "+i.name+" ("+label(left(i)).toLowerCase()+")"}).join(", ")+". Skip it unless you need more."}
+  else d.textContent="Not in your fridge. Go ahead and buy it.";
+  box.append(d);
+}
+function addItem(name,qty,exp){
+  name=String(name).trim().slice(0,40);if(!name)return;
+  var key=name.toLowerCase(),f=items.filter(function(i){return i.name.toLowerCase()===key})[0];
+  if(f){f.qty=Math.min(99,f.qty+qty);f.exp=exp}else items.push({name:name,qty:qty,exp:exp});
+}
+
+/* camera */
+function setStatus(t,err,busy){var s=$("#status");s.textContent="";s.className="status"+(err?" err":"");if(t)s.append(document.createTextNode(t));if(busy){var b=el("div","bar");b.append(el("i"));s.append(b)}}
+function stopCam(){live=false;if(stream){stream.getTracks().forEach(function(t){t.stop()});stream=null}$("#cam").hidden=true}
+async function startScan(){
+  setStatus("");
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"environment"}},audio:false});
+    var v=$("#vid");v.srcObject=stream;$("#cam").hidden=false;await v.play();
+  }catch(e){stopCam();$("#file").click();return}
+  session={};live=true;$("#hud").textContent="Loading the recognition model (first time only)…";
+  var m;
+  try{m=await getModel()}catch(e){stopCam();setStatus("Couldn’t load the recognition model. Check your Wi-Fi and try again, or add items by hand below.",true);$("details").open=true;return}
+  if(live)loop(m);
+}
+function nice(k){return MAP[k][0].replace(" (rename me)","")}
+function loop(m){
+  var v=$("#vid"),cv=$("#ov"),g=cv.getContext("2d"),last=0;
+  async function tick(t){
+    if(!live)return;
+    if(t-last>500&&v.videoWidth){
+      last=t;var preds=[];
+      try{preds=await m.detect(v,20,0.4)}catch(e){}
+      if(!live)return;
+      var r=cv.getBoundingClientRect(),dpr=window.devicePixelRatio||1;
+      cv.width=r.width*dpr;cv.height=r.height*dpr;g.setTransform(dpr,0,0,dpr,0,0);
+      var sc=Math.min(r.width/v.videoWidth,r.height/v.videoHeight),ox=(r.width-v.videoWidth*sc)/2,oy=(r.height-v.videoHeight*sc)/2,cnt={};
+      g.lineWidth=3;g.font="600 14px Poppins,sans-serif";
+      preds.forEach(function(p){
+        if(!MAP[p.class])return;cnt[p.class]=(cnt[p.class]||0)+1;
+        var b=p.bbox,x=ox+b[0]*sc,y=oy+b[1]*sc,w=b[2]*sc,h=b[3]*sc,tx=nice(p.class);
+        g.strokeStyle="#5BE08B";g.strokeRect(x,y,w,h);
+        g.fillStyle="#5BE08B";g.fillRect(x,Math.max(0,y-22),g.measureText(tx).width+10,22);
+        g.fillStyle="#04301a";g.fillText(tx,x+5,Math.max(16,y-6));
+      });
+      Object.keys(cnt).forEach(function(k){session[k]=Math.max(session[k]||0,cnt[k])});
+      var ks=Object.keys(session);
+      $("#hud").textContent=ks.length?"Found: "+ks.map(function(k){return nice(k)+" ×"+session[k]}).join(", "):"Point the camera at your food…";
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+async function shrink(src){
+  var bmp=await createImageBitmap(src),k=Math.min(1,1024/Math.max(bmp.width,bmp.height));
+  var c=document.createElement("canvas");c.width=Math.round(bmp.width*k);c.height=Math.round(bmp.height*k);
+  c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+  return new Promise(function(res,rej){c.toBlob(function(b){b?res(b):rej(new Error("blob"))},"image/jpeg",.85)});
+}
+var MAP={banana:["Banana",5],apple:["Apple",14],orange:["Orange",14],broccoli:["Broccoli",5],carrot:["Carrot",14],sandwich:["Sandwich",2],"hot dog":["Hot dog",3],pizza:["Pizza",2],donut:["Donut",2],cake:["Cake",3],bottle:["Bottle (rename me)",7],cup:["Cup or jar (rename me)",5],bowl:["Bowl of food (rename me)",3]};
+var model=null;
+function loadScript(u){return new Promise(function(res,rej){var t=document.createElement("script");t.src=u;t.onload=res;t.onerror=function(){rej(new Error("load"))};document.head.append(t)})}
+async function getModel(){
+  if(model)return model;
+  if(!window.tf)await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js");
+  if(!window.cocoSsd)await loadScript("https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js");
+  model=await cocoSsd.load({base:"lite_mobilenet_v2"});return model;
+}
+async function analyze(src){
+  $("#scanBtn").disabled=true;setStatus("Loading the recognition model (first scan only)…",false,true);
+  try{
+    var m=await getModel();setStatus("Looking at your shelf…",false,true);
+    var bmp=await createImageBitmap(await shrink(src));
+    var c=document.createElement("canvas");c.width=bmp.width;c.height=bmp.height;c.getContext("2d").drawImage(bmp,0,0);
+    var preds=await m.detect(c,40,0.3),count={};
+    preds.forEach(function(p){if(MAP[p.class])count[p.class]=(count[p.class]||0)+1});
+    var list=Object.keys(count).map(function(k){return{name:MAP[k][0],qty:Math.min(99,count[k]),days:MAP[k][1]}});
+    if(!list.length){setStatus("No food recognized. Move closer, turn on the fridge light, or add items by hand below.",true);$("details").open=true}
+    else{setStatus("");showFound(list)}
+  }catch(e){setStatus("Couldn’t load the recognition model. Check your Wi-Fi and try again, or add items by hand below.",true);$("details").open=true}
+  finally{$("#scanBtn").disabled=false}
+}
+function showFound(list){
+  pending=list;var f=$("#found");f.textContent="";
+  list.forEach(function(o){
+    var d=el("div","det"),cb=document.createElement("input");cb.type="checkbox";cb.checked=true;cb.setAttribute("aria-label","Include "+o.name);cb.onchange=function(){o.skip=!cb.checked};
+    var nm=document.createElement("input");nm.type="text";nm.value=o.name;nm.setAttribute("aria-label","Item name");nm.oninput=function(){o.name=nm.value};
+    var q=document.createElement("input");q.type="number";q.min=1;q.max=99;q.value=o.qty;q.style.width="70px";q.setAttribute("aria-label","Quantity");q.oninput=function(){o.qty=Math.min(99,Math.max(1,parseInt(q.value,10)||1))};
+    d.append(cb,nm,q);f.append(d);
+  });
+  $("#sheet").hidden=false;$("#addAll").focus();
+}
+
+$("#scanBtn").onclick=startScan;
+$("#camCancel").onclick=stopCam;
+$("#camDone").onclick=function(){
+  var ss=session;stopCam();
+  var list=Object.keys(ss).map(function(k){return{name:MAP[k][0],qty:Math.min(99,ss[k]),days:MAP[k][1]}});
+  if(list.length)showFound(list);else{setStatus("Nothing recognized. Try again closer to the food, or add items by hand below.",true);$("details").open=true}
+};
+$("#file").onchange=function(e){var f=e.target.files&&e.target.files[0];e.target.value="";if(f)analyze(f)};
+$("#addAll").onclick=function(){
+  pending.forEach(function(o){if(!o.skip)addItem(o.name,o.qty,inDays(o.days))});
+  pending=[];$("#sheet").hidden=true;save();render();setStatus("Added to your fridge.");
+};
+$("#shCancel").onclick=function(){pending=[];$("#sheet").hidden=true;setStatus("")};
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){stopCam();$("#sheet").hidden=true}});
+$("#shop").oninput=checkShop;
+$("#mDate").value=inDays(7);
+$("#mAdd").onclick=function(){
+  var n=$("#mName").value.trim();if(!n){$("#mName").focus();return}
+  var q=Math.min(99,Math.max(1,parseInt($("#mQty").value,10)||1)),d=$("#mDate").value||inDays(7);
+  addItem(n,q,d);save();render();$("#mName").value="";$("#mQty").value=1;$("#mDate").value=inDays(7);
+};
+render();
+})();
+</script>
+</body>
+</html>
